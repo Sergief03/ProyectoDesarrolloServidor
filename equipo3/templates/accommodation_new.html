@@ -1,0 +1,30 @@
+<h2>Crear Alojamiento</h2>
+
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
+<form method="POST">
+
+Nombre: <input name="name"><br>
+Dirección: <input name="address"><br>
+Teléfono: <input name="phoneNumber"><br>
+Web: <input name="web"><br>
+Estrellas: <input name="stars_quality" type="number"><br>
+Descripción: <textarea name="description"></textarea><br>
+
+Tipo:
+<select name="type">
+    <option value="hotel">Hotel</option>
+    <option value="house">Casa</option>
+</select><br>
+
+Empresa:
+<select name="id_company">
+    {% for u in users %}
+        <option value="{{u.id}}">{{u.username}}</option>
+    {% endfor %}
+</select><br>
+
+<button type="submit">Crear</button>
+</form>
