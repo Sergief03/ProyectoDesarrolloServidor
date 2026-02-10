@@ -14,7 +14,7 @@ class Accommodation(db.Model):
     type = db.Column(db.String(20), nullable=False)  # hotel o house
 
     # Foreign key a User
-    id_company = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    idCompany = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     owner = db.relationship('User', back_populates='accommodations')
 
     bookings = db.relationship('AccommodationBookingLine', back_populates='accommodation', cascade="all, delete-orphan")

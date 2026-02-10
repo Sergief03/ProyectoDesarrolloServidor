@@ -49,18 +49,22 @@ def create():
 # show
 @acomodation_bp.route('/acomodation/show/<int:id>', methods=['GET'])
 def show(id):
+
     accommodation = Accommodation.query.get_or_404(id)
     return render_template('acomodationShow.html', accommodation=accommodation)
 
 # delete
 @acomodation_bp.route('/acomodation/delete/<int:id>', methods=['POST'])
 def delete(id):
+    accommodation = Accommodation.query.get_or_404(id)
     # Control de roles
     if current_user.role not in ['COMPANY', 'ADMIN']:
         flash('No tienes permiso para eliminar esta acomodación', 'error')
         return redirect(url_for('acomodation.index'))
-    
-    accommodation = Accommodation.query.get_or_404(id)
+    if current_user.id != accommodation.idCompany:
+        flash('No tienes permiso para eliminar esta acomodación', 'error')
+        return redirect(url_for('acomodation.index'))
+        
     db.session.delete(accommodation)
     db.session.commit()
     return redirect(url_for('acomodation.index'))
@@ -69,8 +73,9 @@ def delete(id):
 @acomodation_bp.route('/acomodation/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
     accommodation = Accommodation.query.get_or_404(id)
-    
-    # Control de roles
+    if not current_user.is_authenticated:
+        flash('Debes iniciar sesión para crear una acomodación', 'error')
+        return redirect(url_for('login'))
     if current_user.id != accommodation.idCompany:
         flash('No tienes permiso para editar esta acomodación', 'error')
         return redirect(url_for('acomodation.index'))
@@ -83,7 +88,7 @@ def edit(id):
         accommodation.stars_quality = request.form['stars_quality']
         accommodation.description = request.form['description']
         accommodation.type = request.form['type']
-        accommodation.idCompany = request.form['idCompany']
+        # No actualizar id_company, o mantener el actual
         db.session.commit()
         return redirect(url_for('acomodation.index'))
     

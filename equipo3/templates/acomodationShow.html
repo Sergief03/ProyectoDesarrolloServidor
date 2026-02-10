@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Detalle de la acomodación</h1>
+<p><strong>Nombre:</strong> {{ accommodation.name }}</p>
+<p><strong>Dirección:</strong> {{ accommodation.address }}</p>
+<p><strong>Teléfono:</strong> {{ accommodation.phoneNumber }}</p>
+<p><strong>Web:</strong> {{ accommodation.web }}</p>
+<p><strong>Calificación:</strong> {{ accommodation.stars_quality }}</p>
+<p><strong>Descripción:</strong> {{ accommodation.description }}</p>
+<p><strong>Tipo:</strong> {{ accommodation.type }}</p>
+<p><strong>Propietario:</strong> {{ accommodation.owner.username }}</p>
+{% endblock %}

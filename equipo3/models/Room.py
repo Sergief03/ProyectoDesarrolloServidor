@@ -1,4 +1,4 @@
-from models import db # Asumiendo que db se importa desde aquí
+from models.db import db
 
 # -------------------------------------------------------------------
 # CLASE ROOM (HABITACIONES)

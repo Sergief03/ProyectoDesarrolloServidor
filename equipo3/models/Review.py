@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import db
+from models.db import db
 
 class Review(db.Model):
     __tablename__ = 'review'
