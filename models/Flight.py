@@ -1,31 +1,38 @@
 from .db import db
 
 class Flight(db.Model):
-    __tablename__ = 'flight'
+    _tablename_ = 'flight'
 
-    idFlight = db.Column(db.Integer, primary_key=True)
-    airline = db.Column(db.String(100), nullable=False)
-    startDate = db.Column(db.DateTime, nullable=False)
-    endDate = db.Column(db.DateTime, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    aeroline = db.Column(db.String(100), nullable=False)
+    startLocation = db.Column(db.Integer, nullable=False)
+    endLocation = db.Column(db.Integer, nullable=False)
+    startDate = db.Column(db.String(20), nullable=False)
+    endDate = db.Column(db.String(20), nullable=False)
     price = db.Column(db.Float, nullable=False)
     maxOccupants = db.Column(db.Integer, nullable=False)
-    idCompany = db.Column(db.Integer, db.ForeignKey('user.idUser'), nullable=False)
-    idLocationStart = db.Column(db.Integer, db.ForeignKey('location.idLocation'), nullable=False)
-    idLocationEnd = db.Column(db.Integer, db.ForeignKey('location.idLocation'), nullable=False)
+    idCompany = db.Column(db.Integer, nullable=False)
 
-    company = db.relationship('User', foreign_keys=[idCompany])
-    origin = db.relationship('Location', foreign_keys=[idLocationStart])
-    destination = db.relationship('Location', foreign_keys=[idLocationEnd])
+    def _init_(self, aeroline, startLocation, endLocation, startDate, endDate, price, maxOccupants, idCompany, id=None):
+        self.id = id
+        self.aeroline = aeroline
+        self.startLocation = startLocation
+        self.endLocation = endLocation
+        self.startDate = startDate
+        self.endDate = endDate
+        self.price = price
+        self.maxOccupants = maxOccupants
+        self.idCompany = idCompany
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            "idFlight": self.idFlight,
-            "airline": self.airline,
-            "startDate": self.startDate.strftime('%Y/%m/%d %H:%M:%S'),
-            "endDate": self.endDate.strftime('%Y/%m/%d %H:%M:%S'),
+            "id": self.id,
+            "aeroline": self.aeroline,
+            "startLocation": self.startLocation,
+            "endLocation": self.endLocation,
+            "startDate": self.startDate,
+            "endDate": self.endDate,
             "price": self.price,
             "maxOccupants": self.maxOccupants,
-            "idCompany": self.idCompany,
-            "idLocationStart": self.idLocationStart,
-            "idLocationEnd": self.idLocationEnd
+            "idCompany": self.idCompany
         }
