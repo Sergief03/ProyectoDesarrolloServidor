@@ -2,7 +2,7 @@ from .db import db
 
 class Location(db.Model):
     __tablename__ = 'location'
-    id = db.Column(db.Integer, primary_key=True)
+    idLocation = db.Column(db.Integer, primary_key=True)
     country = db.Column(db.String(50), unique=False, nullable=False)
     city = db.Column(db.String(50), unique=False, nullable=False)
     

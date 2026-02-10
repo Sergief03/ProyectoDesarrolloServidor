@@ -1,6 +1,7 @@
-{% extends 'base.html' %} {% block title %}Sign In{% endblock %} {% block
-nav_icons %} {% endblock %} {% block content %}
-<!-- Login Section -->
+{% extends 'base.html' %} 
+{% block title %}Sign In{% endblock %} 
+{% block nav_icons %} {% endblock %} 
+{% block content %}
 <div class="auth-wrapper">
   <div class="auth-card">
     <div class="auth-header">
@@ -8,44 +9,20 @@ nav_icons %} {% endblock %} {% block content %}
     </div>
 
     {% if error %}
-    <div
-      style="
-        background-color: #fee2e2;
-        color: #991b1b;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-        font-size: 0.9rem;
-      "
-    >
+    <div style="background-color: #fee2e2; color: #991b1b; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
       {{ error }}
     </div>
     {% endif %}
 
-    <form action="{{ url_for('login') }}" method="POST">
+    <form action="{{ url_for('userBp.login') }}" method="POST">
       <div class="form-group">
         <label for="email" class="form-label">E-Mail</label>
-        <input
-          type="text"
-          id="email"
-          name="email"
-          class="form-input"
-          placeholder="Ex: email@email.com"
-          required
-        />
+        <input type="text" id="email" name="email" class="form-input" placeholder="Ex: email@email.com" required />
       </div>
 
       <div class="form-group">
         <label for="password" class="form-label">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          class="form-input"
-          placeholder="••••••••"
-          required
-        />
+        <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required />
       </div>
       <button type="submit" class="auth-btn">Sign In</button>
     </form>
@@ -53,7 +30,7 @@ nav_icons %} {% endblock %} {% block content %}
     <div class="auth-footer">
       <p>
         ¿Don't have an account?
-        <a href="{{ url_for('register') }}">Sign Up</a>
+        <a href="{{ url_for('userBp.register') }}">Sign Up</a>
       </p>
     </div>
   </div>

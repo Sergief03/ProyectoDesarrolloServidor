@@ -2,8 +2,8 @@ from .db import db
 
 class Rooms(db.Model):
     __tablename__ = 'rooms'
-    id = db.Column(db.Integer, primary_key=True)
-    idAccommodation = db.Column(db.Integer, db.ForeignKey('accommodations.id'), nullable=False)
+    idRoom = db.Column(db.Integer, primary_key=True)
+    idAccommodation = db.Column(db.Integer, db.ForeignKey('accommodations.idAccomodation'), nullable=False)
     roomNumber = db.Column(db.String(20), nullable=True)
     type = db.Column(db.String(20), nullable=False)
     priceNight = db.Column(db.Float, nullable=False)

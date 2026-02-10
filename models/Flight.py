@@ -3,7 +3,7 @@ from .db import db
 class Flight(db.Model):
     _tablename_ = 'flight'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idFlight = db.Column(db.Integer, primary_key=True, autoincrement=True)
     aeroline = db.Column(db.String(100), nullable=False)
     startLocation = db.Column(db.Integer, nullable=False)
     endLocation = db.Column(db.Integer, nullable=False)

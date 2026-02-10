@@ -9,12 +9,12 @@ class Trip(db.Model):
     __tablename__ = 'trip'
     
     idTrip = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    startLocation = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
-    endLocation = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
+    startLocation = db.Column(db.Integer, db.ForeignKey('location.idLocation'), nullable=False)
+    endLocation = db.Column(db.Integer, db.ForeignKey('location.idLocation'), nullable=False)
     startDate = db.Column(db.DateTime, nullable=False)
     endDate = db.Column(db.DateTime, nullable=False)
     occupants = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Decimal(10, 2), nullable=False)  # Price per person
+    price = db.Column(db.Numeric(10, 2), nullable=False)  # Price per person
     idCompany = db.Column(db.Integer, db.ForeignKey('user.idUser'), nullable=False)  # FK to User with role COMPANY
     
     start_location = db.relationship('Location', foreign_keys=[startLocation])

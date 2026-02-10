@@ -2,7 +2,7 @@ from .db import db
    
 class Accommodations(db.Model):
     __tablename__ = 'accommodations'
-    id = db.Column(db.Integer, primary_key=True)
+    idAccomodation = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=False, nullable=False)
     address = db.Column(db.String(120), unique=False, nullable=False)
     phoneNumber = db.Column(db.String(20), unique=False, nullable=False)
@@ -10,7 +10,7 @@ class Accommodations(db.Model):
     stars_quality = db.Column(db.Integer, unique=False, nullable=False)
     description = db.Column(db.String(255), unique=False, nullable=False)
     type = db.Column(db.String(20), unique=False, nullable=False)
-    idCompany = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    idCompany = db.Column(db.Integer, db.ForeignKey('user.idUser'), nullable=False)
     
 
     def __init__(self, name, address, phoneNumber, web, stars_quality, description, type, idCompany):

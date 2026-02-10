@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, render_template
 from models import db
-from controllers.UserController import UserController
+# IMPORTANTE: Importamos el objeto userBp, no la clase UserController
+from controllers.UserController import userBp 
 
 app = Flask(__name__)
 
@@ -12,27 +13,21 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db.init_app(app)
 
-# --- RUTA BASE ---
+# --- REGISTRO DE BLUEPRINTS ---
+# Esto conecta todas las rutas que definiste en UserController (login, register, logout)
+# url_prefix='/auth' hará que las rutas sean: /auth/login, /auth/register
+app.register_blueprint(userBp, url_prefix='/auth') 
+
+# --- RUTA BASE (Landing Page) ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return "Pagina /"
-
-# --- RUTAS DE USUARIO (Login/Registro) ---
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    return UserController.login()
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    return UserController.register()
-
-@app.route('/logout')
-def logout():
-    return UserController.logout()
+    # Aquí cargamos el HTML chulo que te hice antes
+    return render_template('index.html')
 
 # --- CREAR BASE DE DATOS ---
 if __name__ == '__main__':
     with app.app_context():
+        # db.drop_all() # Descomenta esto SOLO si necesitas borrar todo y empezar de cero por errores de FK
         db.create_all()
     
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0') # host='0.0.0.0' para que sea accesible en red
