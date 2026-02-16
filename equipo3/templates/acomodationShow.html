@@ -180,6 +180,12 @@
         document.getElementById('modalRoomType').innerText = roomType;
         document.getElementById('modalPriceNight').innerText = priceNight;
         currentPriceNight = parseFloat(priceNight);
+
+        // Evitar fechas pasadas en check-in
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('modalStartDate').min = today;
+        document.getElementById('modalEndDate').min = today;
+
         calculateTotal();
     }
 
@@ -188,55 +194,45 @@
     }
 
     function calculateTotal() {
-        const start = document.getElementById('modalStartDate').value;
-        const end = document.getElementById('modalEndDate').value;
+        const startInput = document.getElementById('modalStartDate');
+        const endInput = document.getElementById('modalEndDate');
+        const start = startInput.value;
+        const end = endInput.value;
         const totalSpan = document.getElementById('modalTotalPrice');
         const totalInput = document.getElementById('modalTotalPriceInput');
+
+        // 🔒 Clave: impedir que el checkout sea anterior al checkin
+        if (start) {
+            endInput.min = start;
+        }
 
         if (start && end) {
             const startDate = new Date(start);
             const endDate = new Date(end);
-            const diffTime = Math.abs(endDate - startDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (diffDays > 0) {
-                const total = (diffDays * currentPriceNight).toFixed(2);
-                totalSpan.innerText = total;
-                totalInput.value = total;
-            } else {
+            // Si el usuario intenta poner una fecha inválida, la corregimos
+            if (endDate <= startDate) {
                 totalSpan.innerText = "0.00 (Select valid dates)";
                 totalInput.value = 0;
+                return;
             }
+
+            const diffTime = endDate - startDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            const total = (diffDays * currentPriceNight).toFixed(2);
+            totalSpan.innerText = total;
+            totalInput.value = total;
         }
     }
 
-    // Close modal when clicking outside
     window.onclick = function (event) {
         const modal = document.getElementById('bookingModal');
         if (event.target == modal) {
             closeBookingModal();
         }
     }
-
-    // Initial fetch of reviews (simple version)
-    fetch("{{ url_for('booking.list_accommodation_reviews', accommodation_id=accommodation.id) }}")
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('reviews-container');
-            if (data.length > 0) {
-                container.innerHTML = data.map(r => `
-                <div style="border-bottom: 1px solid var(--border-color); padding: var(--spacing-sm) 0;">
-                    <div style="color: var(--accent); margin-bottom: 0.25rem;">
-                         ${'★'.repeat(r.ratingStars)}${'☆'.repeat(5 - r.ratingStars)}
-                    </div>
-                    <p>${r.reviewComment}</p>
-                    <small class="text-muted">By User #${r.idUser}</small>
-                </div>
-            `).join('');
-            } else {
-                container.innerHTML = '<p class="text-muted">No reviews yet.</p>';
-            }
-        });
 </script>
+
 {% endif %}
 {% endblock %}

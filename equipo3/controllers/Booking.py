@@ -68,7 +68,7 @@ def book_accommodation():
     if request.method == 'POST':
         user_id = request.form.get('userId')
         accommodation_id = request.form.get('accommodationId')
-        room_id = request.form.get('roomId') # Added roomId
+        room_id = request.form.get('roomId')
         start_date = request.form.get('startDate')
         end_date = request.form.get('endDate')
         total_price = request.form.get('totalPrice')
@@ -77,13 +77,37 @@ def book_accommodation():
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-            if start_date > end_date:
-                return render_template('book.html', error='La fecha de inicio no puede ser posterior a la fecha de fin.')
+            
+            if start_date >= end_date:
+                return render_template(
+                    'book.html',
+                    error='La fecha de salida debe ser posterior a la fecha de entrada.'
+                )
+
+            
+            if start_date < datetime.today().date():
+                return render_template(
+                    'book.html',
+                    error='No puedes reservar en fechas pasadas.'
+                )
+
+            #
+            overlapping_booking = db.session.query(AccommodationBookingLine).filter(
+                AccommodationBookingLine.idRoom == room_id,
+                AccommodationBookingLine.startDate < end_date,
+                AccommodationBookingLine.endDate > start_date
+            ).first()
+
+            if overlapping_booking:
+                return render_template(
+                    'book.html',
+                    error='Esta habitación ya está reservada en esas fechas.'
+                )
 
             booking = AccommodationBookingLine(
                 idUser=user_id,
                 idAccommodation=accommodation_id,
-                idRoom=room_id, # Added idRoom
+                idRoom=room_id,
                 startDate=start_date,
                 endDate=end_date,
                 totalPrice=total_price,
@@ -92,7 +116,13 @@ def book_accommodation():
 
             db.session.add(booking)
             db.session.commit()
-            return redirect(url_for('accommodation.list_user_bookings_html', user_id=user_id))
+
+            return redirect(
+                url_for(
+                    'accommodation.list_user_bookings_html',
+                    user_id=user_id
+                )
+            )
 
         except Exception as e:
             db.session.rollback()
@@ -101,7 +131,6 @@ def book_accommodation():
     accommodations = Accommodation.query.all()
     users = User.query.all()
     return render_template('book.html', accommodations=accommodations, users=users)
-
 
 # =========================
 # FORMULARIO RESEÑA
