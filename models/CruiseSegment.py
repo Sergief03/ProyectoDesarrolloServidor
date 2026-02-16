@@ -4,9 +4,9 @@ class CruiseSegment(db.Model):
     __tablename__ = 'cruise_segments'
 
     idSegment = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    idRoute = db.Column(db.Integer, db.ForeignKey('cruise_route.idRoute'), nullable=False)
-    idStopOrigin = db.Column(db.Integer, db.ForeignKey('cruise_stops.idStop'), nullable=False)
-    idStopDestination = db.Column(db.Integer, db.ForeignKey('cruise_stops.idStop'), nullable=False)
+    idRoute = db.Column(db.Integer, db.ForeignKey('cruise_route.idCruiseRoute'), nullable=False)
+    idStopOrigin = db.Column(db.Integer, db.ForeignKey('cruise_stops.idCruiseStop'), nullable=False)
+    idStopDestination = db.Column(db.Integer, db.ForeignKey('cruise_stops.idCruiseStop'), nullable=False)
     price = db.Column(db.Float, nullable=False)
 
     def __init__(self, idRoute, idStopOrigin, idStopDestination, price, idSegment=None):
