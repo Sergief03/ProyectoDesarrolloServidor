@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestionar Habitaciones - {{ accommodation.name }} | TravelDream{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 900px;">
+
+    <div class="mb-4">
+        <a href="{{ url_for('aco.manage_hotels') }}" class="text-decoration-none text-muted transition-hover">
+            <i class="fas fa-arrow-left me-2"></i>Volver a mis Propiedades
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body">
+            <h1 class="h2 mb-1">Gestionar Habitaciones</h1>
+            <p class="text-muted mb-0">Para la propiedad: <strong class="text-primary">{{ accommodation.name }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Add Room Form -->
+    <div class="card shadow mb-5">
+        <div class="card-header bg-primary text-white">
+            <h4 class="h5 mb-0"><i class="fas fa-plus-circle me-2"></i>Añadir Nueva Habitación</h4>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('aco.add_room', id=accommodation.id) }}" method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Número / Nombre</label>
+                        <input type="text" name="roomNumber" class="form-control" placeholder="Ej: 101 o Suite A" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Tipo de Habitación</label>
+                        <input type="text" name="type" class="form-control" placeholder="Ej: Doble, King, Suite" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Precio por Noche (€)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">€</span>
+                            <input type="number" step="0.01" name="priceNight" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Capacidad (Huéspedes)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-users"></i></span>
+                            <input type="number" name="capacity" class="form-control" placeholder="Ej: 2" required min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Habitación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Rooms List -->
+    <h3 class="h4 mb-4 border-bottom pb-2">Habitaciones Existentes</h3>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for room in accommodation.rooms %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 room-card hover-elevate transition-all">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold text-dark mb-0">{{ room.type }}</h5>
+                        <span class="badge bg-light text-dark border">No. {{ room.roomNumber }}</span>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-user-friends me-2"></i>{{ room.capacity }} Huéspedes
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                        <span class="fw-bold text-success fs-5">{{ room.priceNight }}€ <small class="text-muted fw-normal fs-6">/noche</small></span>
+
+                        <form action="{{ url_for('aco.delete_room', id=room.id) }}" method="POST"
+                            onsubmit="return confirm('¿Está seguro de querer eliminar esta habitación?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle" title="Eliminar Habitación">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded border border-dashed">
+                <i class="fas fa-bed fa-3x text-muted mb-3 opacity-50"></i>
+                <h5 class="text-muted">No hay habitaciones registradas.</h5>
+                <p class="small text-muted mb-0">Utilice el formulario de arriba para añadir la primera habitación.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .hover-elevate:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
