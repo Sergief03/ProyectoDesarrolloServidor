@@ -214,3 +214,36 @@ def list_accommodation_reviews(accommodation_id):
 def list_accommodation_reviews_html(accommodation_id):
     reviews = Review.query.filter_by(idAccommodation=accommodation_id).all()
     return render_template('reviews.html', reviews=reviews)
+
+# =========================
+# ACEPTAR RESERVA 
+# =========================
+@booking_bp.route('/booking/accept/<int:id>', methods=['POST'])
+def accept_booking(id):
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+
+    booking = AccommodationBookingLine.query.get_or_404(id)
+    accommodation = Accommodation.query.get(booking.idAccommodation)
+
+    # Allow cancellation if user owns the booking OR user owns the property OR user is admin
+    is_host = accommodation.idCompany == session["user_id"]
+    is_admin = session.get("role") == "admin" # changed to admin lowercase
+
+    if not (is_host or is_admin):
+        flash('Permission denied')
+        return redirect(url_for('aco.home'))
+
+    booking.status = 'accepted'
+    db.session.commit()
+    
+    flash('Booking accepted successfully')
+    
+    # Redirect back to where they came from (conceptually)
+    if is_host:
+        return redirect(url_for('booking.company_bookings'))
+    elif is_admin:
+        return redirect(url_for('aco.admin_dashboard')) # Placeholder for now
+    else:
+        return redirect(url_for('booking.list_user_bookings_html', user_id=session["user_id"]))
+
