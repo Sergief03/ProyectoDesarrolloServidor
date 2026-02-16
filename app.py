@@ -24,6 +24,8 @@ def index():
     # Aquí cargamos el HTML chulo que te hice antes
     return render_template('index.html')
 
+
+
 # --- CREAR BASE DE DATOS ---
 if __name__ == '__main__':
     with app.app_context():
