@@ -1,21 +1,74 @@
-# controllers/accommodation_bp.py
-from flask import Blueprint, request, jsonify
-from models import db
-from models import Accommodation, AccommodationBookingLine, Review, Room, User
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
+from models.db import db
+from equipo3.models.Accommodation import Accommodation
+from equipo3.models.AccommodationBookingLine import AccommodationBookingLine
+from equipo3.models.Review import Review
+from equipo3.models.Room import Room
+from models.User import User
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+
+booking_bp = Blueprint('booking', __name__, template_folder='../templates')
+
+# =========================
+# COMPANY BOOKINGS
+# =========================
+@booking_bp.route('/company/bookings', methods=['GET'])
+def company_bookings():
+    if "user_id" not in session or session.get("role") != "company":
+        return redirect(url_for('login'))
+
+    # Fetch accommodations owned by the company
+    company_accommodations = Accommodation.query.filter_by(idCompany=session["user_id"]).with_entities(Accommodation.id).all()
+    accommodation_ids = [acc.id for acc in company_accommodations]
+
+    # Fetch bookings for these accommodations
+    bookings = AccommodationBookingLine.query.filter(AccommodationBookingLine.idAccommodation.in_(accommodation_ids)).order_by(AccommodationBookingLine.startDate.desc()).all()
+
+    return render_template('companyBookings.html', bookings=bookings)
 
 
-accommodation_bp = Blueprint('accommodation', __name__, url_prefix='/accommodation',template_folder='../templates')
+# =========================
+# CANCEL BOOKING
+# =========================
+@booking_bp.route('/booking/cancel/<int:id>', methods=['POST'])
+def cancel_booking(id):
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+
+    booking = AccommodationBookingLine.query.get_or_404(id)
+    accommodation = Accommodation.query.get(booking.idAccommodation)
+
+    # Allow cancellation if user owns the booking OR user owns the property OR user is admin
+    is_owner = booking.idUser == session["user_id"]
+    is_host = accommodation.idCompany == session["user_id"]
+    is_admin = session.get("role") == "admin" # changed to admin lowercase
+
+    if not (is_owner or is_host or is_admin):
+        flash('Permission denied')
+        return redirect(url_for('aco.home'))
+
+    booking.status = 'cancelled'
+    db.session.commit()
+    
+    flash('Booking cancelled successfully')
+    
+    # Redirect back to where they came from (conceptually)
+    if is_host:
+        return redirect(url_for('booking.company_bookings'))
+    elif is_admin:
+        return redirect(url_for('aco.admin_dashboard')) # Placeholder for now
+    else:
+        return redirect(url_for('booking.list_user_bookings_html', user_id=session["user_id"]))
 
 # =========================
 # FORMULARIO RESERVA
 # =========================
-@accommodation_bp.route('/book', methods=['GET', 'POST'])
+@booking_bp.route('/book', methods=['GET', 'POST'])
 def book_accommodation():
     if request.method == 'POST':
         user_id = request.form.get('userId')
         accommodation_id = request.form.get('accommodationId')
+        room_id = request.form.get('roomId') # Added roomId
         start_date = request.form.get('startDate')
         end_date = request.form.get('endDate')
         total_price = request.form.get('totalPrice')
@@ -30,6 +83,7 @@ def book_accommodation():
             booking = AccommodationBookingLine(
                 idUser=user_id,
                 idAccommodation=accommodation_id,
+                idRoom=room_id, # Added idRoom
                 startDate=start_date,
                 endDate=end_date,
                 totalPrice=total_price,
@@ -52,7 +106,7 @@ def book_accommodation():
 # =========================
 # FORMULARIO RESEÑA
 # =========================
-@accommodation_bp.route('/review', methods=['GET', 'POST'])
+@booking_bp.route('/review', methods=['GET', 'POST'])
 def add_review():
     if request.method == 'POST':
         user_id = request.form.get('idUser')
@@ -87,7 +141,7 @@ def add_review():
 # =========================
 # LISTAR RESERVAS (JSON)
 # =========================
-@accommodation_bp.route('/bookings/json/<int:user_id>', methods=['GET'])
+@booking_bp.route('/bookings/json/<int:user_id>', methods=['GET'])
 def list_user_bookings(user_id):
     bookings = AccommodationBookingLine.query.filter_by(idUser=user_id).all()
     return jsonify([{
@@ -103,7 +157,7 @@ def list_user_bookings(user_id):
 # =========================
 # LISTAR RESERVAS (HTML)
 # =========================
-@accommodation_bp.route('/bookings/<int:user_id>', methods=['GET'])
+@booking_bp.route('/bookings/<int:user_id>', methods=['GET'])
 def list_user_bookings_html(user_id):
     bookings = AccommodationBookingLine.query.filter_by(idUser=user_id).all()
     return render_template('bookings.html', bookings=bookings)
@@ -112,7 +166,7 @@ def list_user_bookings_html(user_id):
 # =========================
 # LISTAR RESEÑAS (JSON)
 # =========================
-@accommodation_bp.route('/reviews/json/<int:accommodation_id>', methods=['GET'])
+@booking_bp.route('/reviews/json/<int:accommodation_id>', methods=['GET'])
 def list_accommodation_reviews(accommodation_id):
     reviews = Review.query.filter_by(idAccommodation=accommodation_id).all()
     return jsonify([{
@@ -127,7 +181,7 @@ def list_accommodation_reviews(accommodation_id):
 # =========================
 # LISTAR RESEÑAS (HTML)
 # =========================
-@accommodation_bp.route('/reviews/<int:accommodation_id>', methods=['GET'])
+@booking_bp.route('/reviews/<int:accommodation_id>', methods=['GET'])
 def list_accommodation_reviews_html(accommodation_id):
     reviews = Review.query.filter_by(idAccommodation=accommodation_id).all()
     return render_template('reviews.html', reviews=reviews)
