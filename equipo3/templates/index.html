@@ -19,11 +19,11 @@
                 <!-- Date inputs optional for search query, but good for UI -->
                 <div class="form-group" style="flex: 1; min-width: 150px; text-align: left;">
                     <label class="form-label"><i class="fa-regular fa-calendar"></i> Check-in</label>
-                    <input type="date" name="checkin" class="form-control">
+                    <input type="date" name="checkin" class="form-control" value="{{ checkin or '' }}">
                 </div>
                 <div class="form-group" style="flex: 1; min-width: 150px; text-align: left;">
                     <label class="form-label"><i class="fa-regular fa-calendar"></i> Check-out</label>
-                    <input type="date" name="checkout" class="form-control">
+                    <input type="date" name="checkout" class="form-control" value="{{ checkout or '' }}">
                 </div>
                 <div class="form-group" style="flex: 0 0 auto;">
                     <label class="form-label" style="visibility: hidden;">Search</label>
@@ -41,7 +41,7 @@
 
     <div class="grid grid-cols-3">
         {% for stay in accommodations %}
-        <a href="{{ url_for('aco.show', id=stay.id) }}" class="card-link">
+        <a href="{{ url_for('aco.show', id=stay.id, checkin=checkin, checkout=checkout) }}" class="card-link">
             <div class="card">
                 <!-- Placeholder image since we don't have images in DB yet -->
                 <img src="https://placehold.co/600x400?text={{ stay.name }}" alt="{{ stay.name }}" class="card-img">

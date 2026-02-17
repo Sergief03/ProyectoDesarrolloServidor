@@ -29,19 +29,54 @@
           <a href="{{ url_for('aco.home') }}">Home</a>
 
           {% if g.user %}
+
+          {# --- Cliente (user) --- #}
+          {% if g.user.role == 'user' %}
+          <a href="{{ url_for('booking.list_user_bookings_html', user_id=g.user.id) }}">
+            <i class="fa-solid fa-suitcase"></i> My Bookings
+          </a>
+          {% endif %}
+
+          {# --- Company --- #}
           {% if g.user.role == 'company' %}
-          <a href="{{ url_for('aco.manage_hotels') }}">My Properties</a>
-          <a href="{{ url_for('booking.company_bookings') }}">Manage Bookings</a>
+          <a href="{{ url_for('aco.manage_hotels') }}">
+            <i class="fa-solid fa-building"></i> My Properties
+          </a>
+          <a href="{{ url_for('booking.company_bookings') }}">
+            <i class="fa-solid fa-calendar-check"></i> Manage Bookings
+          </a>
+          <a href="{{ url_for('aco.create') }}">
+            <i class="fa-solid fa-plus"></i> Add Property
+          </a>
           {% endif %}
 
+          {# --- Admin (acceso total) --- #}
           {% if g.user.role == 'admin' %}
-          <a href="{{ url_for('aco.admin_dashboard') }}">Admin Dashboard</a>
+          <a href="{{ url_for('aco.admin_dashboard') }}">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard
+          </a>
+          <a href="{{ url_for('aco.manage_hotels') }}">
+            <i class="fa-solid fa-building"></i> Properties
+          </a>
+          <a href="{{ url_for('booking.company_bookings') }}">
+            <i class="fa-solid fa-calendar-check"></i> Bookings
+          </a>
+          <a href="{{ url_for('aco.create') }}">
+            <i class="fa-solid fa-plus"></i> Add Property
+          </a>
           {% endif %}
 
-          <div class="user-menu" style="display: flex; align-items: center; gap: 1rem;">
-            <span class="badge badge-primary">{{ g.user.name }}</span>
-            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+          {# --- User menu (todos los roles) --- #}
+          <div class="user-menu" style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="badge badge-primary" style="display: flex; align-items: center; gap: 0.4rem;">
+              <i class="fa-solid fa-user"></i> {{ g.user.username }}
+              <span style="opacity: 0.7; font-size: 0.75rem;">({{ g.user.role }})</span>
+            </span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
           </div>
+
           {% else %}
           <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
           <a href="{{ url_for('register') }}" class="btn btn-primary">Register</a>

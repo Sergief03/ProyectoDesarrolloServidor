@@ -1,44 +1,56 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reservas del Usuario</title>
-    <style>
-        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-    <h1 style="text-align:center;">Reservas del Usuario</h1>
+{% extends 'base.html' %}
+
+{% block title %}Reservas del Usuario - HorizonStays{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: var(--spacing-lg);">Reservas del Usuario</h1>
 
     {% if bookings %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Reserva</th>
-                    <th>ID Alojamiento</th>
-                    <th>Fecha Inicio</th>
-                    <th>Fecha Fin</th>
-                    <th>Precio Total</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for b in bookings %}
-                <tr>
-                    <td>{{ b.id }}</td>
-                    <td>{{ b.idAccommodation }}</td>
-                    <td>{{ b.startDate.strftime('%Y-%m-%d') }}</td>
-                    <td>{{ b.endDate.strftime('%Y-%m-%d') }}</td>
-                    <td>{{ b.totalPrice }}</td>
-                    <td>{{ b.status }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: var(--spacing-sm);">ID Reserva</th>
+                            <th style="padding: var(--spacing-sm);">ID Alojamiento</th>
+                            <th style="padding: var(--spacing-sm);">Fecha Inicio</th>
+                            <th style="padding: var(--spacing-sm);">Fecha Fin</th>
+                            <th style="padding: var(--spacing-sm);">Precio Total</th>
+                            <th style="padding: var(--spacing-sm);">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: var(--spacing-sm);">{{ b.id }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ b.idAccommodation }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ b.startDate.strftime('%Y-%m-%d') }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ b.endDate.strftime('%Y-%m-%d') }}</td>
+                            <td style="padding: var(--spacing-sm); font-weight: 700;">${{ b.totalPrice }}</td>
+                            <td style="padding: var(--spacing-sm);">
+                                {% if b.status == 'confirmed' %}
+                                <span class="badge badge-secondary">Confirmed</span>
+                                {% elif b.status == 'cancelled' %}
+                                <span class="badge badge-danger">Cancelled</span>
+                                {% else %}
+                                <span class="badge badge-accent">{{ b.status|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-        <p style="text-align:center;">No hay reservas para este usuario.</p>
+    <div class="card">
+        <div class="card-body" style="text-align: center; padding: var(--spacing-xl);">
+            <p class="text-muted">No hay reservas para este usuario.</p>
+        </div>
+    </div>
     {% endif %}
-</body>
-</html>
+</div>
+{% endblock %}

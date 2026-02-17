@@ -1,42 +1,50 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reseñas del Alojamiento</title>
-    <style>
-        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-    <h1 style="text-align:center;">Reseñas del Alojamiento</h1>
+{% extends 'base.html' %}
+
+{% block title %}Reseñas del Alojamiento - HorizonStays{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: var(--spacing-lg);">Reseñas del Alojamiento</h1>
 
     {% if reviews %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Reseña</th>
-                    <th>ID Usuario</th>
-                    <th>Calificación</th>
-                    <th>Comentario</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in reviews %}
-                <tr>
-                    <td>{{ r.id }}</td>
-                    <td>{{ r.idUser }}</td>
-                    <td>{{ r.ratingStars }} ⭐</td>
-                    <td>{{ r.reviewComment }}</td>
-                    <td>{{ r.createdAt.strftime('%Y-%m-%d %H:%M') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: var(--spacing-sm);">ID Reseña</th>
+                            <th style="padding: var(--spacing-sm);">ID Usuario</th>
+                            <th style="padding: var(--spacing-sm);">Calificación</th>
+                            <th style="padding: var(--spacing-sm);">Comentario</th>
+                            <th style="padding: var(--spacing-sm);">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reviews %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: var(--spacing-sm);">{{ r.id }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ r.idUser }}</td>
+                            <td style="padding: var(--spacing-sm);">
+                                <span class="badge badge-accent">
+                                    <i class="fa-solid fa-star"></i> {{ r.ratingStars }}
+                                </span>
+                            </td>
+                            <td style="padding: var(--spacing-sm);">{{ r.reviewComment }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ r.createdAt.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-        <p style="text-align:center;">No hay reseñas para este alojamiento.</p>
+    <div class="card">
+        <div class="card-body" style="text-align: center; padding: var(--spacing-xl);">
+            <p class="text-muted">No hay reseñas para este alojamiento.</p>
+        </div>
+    </div>
     {% endif %}
-</body>
-</html>
+</div>
+{% endblock %}

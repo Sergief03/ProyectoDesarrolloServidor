@@ -156,7 +156,8 @@ def add_review():
             )
             db.session.add(review)
             db.session.commit()
-            return redirect(url_for('accommodation.list_accommodation_reviews_html', accommodation_id=accommodation_id))
+            flash('¡Reseña enviada exitosamente!', 'success')
+            return redirect(url_for('aco.show', id=accommodation_id))
 
         except Exception as e:
             db.session.rollback()

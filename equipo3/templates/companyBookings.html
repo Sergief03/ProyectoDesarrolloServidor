@@ -32,7 +32,7 @@
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: var(--spacing-sm);">#{{ booking.id }}</td>
                             <td style="padding: var(--spacing-sm);">{{ booking.accommodation.name }}</td>
-                            <td style="padding: var(--spacing-sm);">{{ booking.user.name }}</td>
+                            <td style="padding: var(--spacing-sm);">{{ booking.user.username }}</td>
                             <td style="padding: var(--spacing-sm);">
                                 {% if booking.room %}
                                 {{ booking.room.type }} (No. {{ booking.room.roomNumber }})
