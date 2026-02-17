@@ -73,37 +73,41 @@ def book_accommodation():
         end_date = request.form.get('endDate')
         total_price = request.form.get('totalPrice')
 
+        # Verificar si es una petición AJAX
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json'
+
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-            
+            # Validar fechas
             if start_date >= end_date:
-                return render_template(
-                    'book.html',
-                    error='La fecha de salida debe ser posterior a la fecha de entrada.'
-                )
+                error_msg = 'La fecha de salida debe ser posterior a la fecha de entrada.'
+                if is_ajax:
+                    return jsonify({'success': False, 'error': error_msg}), 400
+                return render_template('book.html', error=error_msg)
 
-            
             if start_date < datetime.today().date():
-                return render_template(
-                    'book.html',
-                    error='No puedes reservar en fechas pasadas.'
-                )
+                error_msg = 'No puedes reservar en fechas pasadas.'
+                if is_ajax:
+                    return jsonify({'success': False, 'error': error_msg}), 400
+                return render_template('book.html', error=error_msg)
 
-            #
+            # Verificar disponibilidad
             overlapping_booking = db.session.query(AccommodationBookingLine).filter(
                 AccommodationBookingLine.idRoom == room_id,
                 AccommodationBookingLine.startDate < end_date,
-                AccommodationBookingLine.endDate > start_date
+                AccommodationBookingLine.endDate > start_date,
+                AccommodationBookingLine.status != 'cancelled'
             ).first()
 
             if overlapping_booking:
-                return render_template(
-                    'book.html',
-                    error='Esta habitación ya está reservada en esas fechas.'
-                )
+                error_msg = 'Esta habitación ya está reservada en esas fechas. Por favor, selecciona otras fechas.'
+                if is_ajax:
+                    return jsonify({'success': False, 'error': error_msg}), 400
+                return render_template('book.html', error=error_msg)
 
+            # Crear la reserva
             booking = AccommodationBookingLine(
                 idUser=user_id,
                 idAccommodation=accommodation_id,
@@ -111,23 +115,30 @@ def book_accommodation():
                 startDate=start_date,
                 endDate=end_date,
                 totalPrice=total_price,
-                status='pending'
+                status='confirmed'
             )
 
             db.session.add(booking)
             db.session.commit()
 
-            return redirect(
-                url_for(
-                    'accommodation.list_user_bookings_html',
-                    user_id=user_id
-                )
-            )
+            if is_ajax:
+                return jsonify({
+                    'success': True,
+                    'message': '¡Reserva confirmada exitosamente!',
+                    'booking_id': booking.id
+                }), 200
+
+            flash('Reserva confirmada exitosamente!', 'success')
+            return redirect(url_for('booking.list_user_bookings_html', user_id=user_id))
 
         except Exception as e:
             db.session.rollback()
-            return render_template('book.html', error=str(e))
+            error_msg = f'Error al procesar la reserva: {str(e)}'
+            if is_ajax:
+                return jsonify({'success': False, 'error': error_msg}), 500
+            return render_template('book.html', error=error_msg)
 
+    # GET request - solo para compatibilidad, no debería usarse desde el modal
     accommodations = Accommodation.query.all()
     users = User.query.all()
     return render_template('book.html', accommodations=accommodations, users=users)

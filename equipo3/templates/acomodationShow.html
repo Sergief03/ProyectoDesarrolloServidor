@@ -347,7 +347,10 @@
                     style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
 
-            <form action="{{ url_for('booking.book_accommodation') }}" method="POST">
+            <!-- Mensajes de éxito/error -->
+            <div id="bookingMessage" style="display: none; margin-bottom: var(--spacing-md); padding: var(--spacing-sm); border-radius: var(--radius-md);"></div>
+
+            <form id="bookingForm" action="{{ url_for('booking.book_accommodation') }}" method="POST">
                 <input type="hidden" name="userId" value="{{ g.user.id }}">
                 <input type="hidden" name="accommodationId" value="{{ accommodation.id }}">
                 <input type="hidden" name="roomId" id="modalRoomId">
@@ -377,7 +380,7 @@
                 <div class="flex gap-4">
                     <button type="button" onclick="closeBookingModal()" class="btn btn-outline"
                         style="flex: 1;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm Booking</button>
+                    <button type="submit" id="submitBookingBtn" class="btn btn-primary" style="flex: 1;">Confirm Booking</button>
                 </div>
             </form>
         </div>
@@ -445,6 +448,91 @@
             closeBookingModal();
         }
     }
+
+    // Manejar envío del formulario de reserva vía AJAX
+    document.getElementById('bookingForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const submitBtn = document.getElementById('submitBookingBtn');
+        const messageDiv = document.getElementById('bookingMessage');
+        const formData = new FormData(form);
+        
+        // Ocultar mensajes anteriores
+        messageDiv.style.display = 'none';
+        messageDiv.innerHTML = '';
+        
+        // Deshabilitar botón durante el envío
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Mostrar mensaje de éxito
+                messageDiv.style.display = 'block';
+                messageDiv.style.backgroundColor = '#d1fae5';
+                messageDiv.style.color = '#065f46';
+                messageDiv.style.border = '1px solid #10b981';
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <strong>${data.message}</strong>
+                    </div>
+                `;
+                
+                // Ocultar formulario
+                form.style.display = 'none';
+                
+                // Recargar la página después de 2 segundos para actualizar disponibilidad
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+                
+            } else {
+                // Mostrar mensaje de error
+                messageDiv.style.display = 'block';
+                messageDiv.style.backgroundColor = '#fee2e2';
+                messageDiv.style.color = '#991b1b';
+                messageDiv.style.border = '1px solid #ef4444';
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-exclamation-circle"></i>
+                        <strong>Error:</strong> ${data.error}
+                    </div>
+                `;
+                
+                // Habilitar botón nuevamente
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Confirm Booking';
+            }
+            
+        } catch (error) {
+            // Error de red o parsing
+            messageDiv.style.display = 'block';
+            messageDiv.style.backgroundColor = '#fee2e2';
+            messageDiv.style.color = '#991b1b';
+            messageDiv.style.border = '1px solid #ef4444';
+            messageDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-exclamation-circle"></i>
+                    <strong>Error:</strong> No se pudo procesar la reserva. Por favor, intenta nuevamente.
+                </div>
+            `;
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Confirm Booking';
+        }
+    });
 </script>
 
 {% endif %}
