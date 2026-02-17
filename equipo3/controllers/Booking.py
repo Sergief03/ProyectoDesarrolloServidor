@@ -14,12 +14,21 @@ booking_bp = Blueprint('booking', __name__, template_folder='../templates')
 # =========================
 @booking_bp.route('/company/bookings', methods=['GET'])
 def company_bookings():
-    if "user_id" not in session or session.get("role") != "company":
+    # Solo company y admin pueden ver reservas de propiedades
+    if "user_id" not in session:
+        flash('Debes iniciar sesión')
         return redirect(url_for('login'))
+    
+    if session.get("role") not in ["company", "admin"]:
+        flash('Solo las compañías pueden gestionar reservas de sus propiedades')
+        return redirect(url_for('aco.home'))
 
-    # Fetch accommodations owned by the company
-    company_accommodations = Accommodation.query.filter_by(idCompany=session["user_id"]).with_entities(Accommodation.id).all()
-    accommodation_ids = [acc.id for acc in company_accommodations]
+    # Fetch accommodations owned by the company (o todas si es admin)
+    if session.get("role") == "admin":
+        accommodation_ids = [acc.id for acc in Accommodation.query.with_entities(Accommodation.id).all()]
+    else:
+        company_accommodations = Accommodation.query.filter_by(idCompany=session["user_id"]).with_entities(Accommodation.id).all()
+        accommodation_ids = [acc.id for acc in company_accommodations]
 
     # Fetch bookings for these accommodations
     bookings = AccommodationBookingLine.query.filter(AccommodationBookingLine.idAccommodation.in_(accommodation_ids)).order_by(AccommodationBookingLine.startDate.desc()).all()
@@ -65,6 +74,21 @@ def cancel_booking(id):
 # =========================
 @booking_bp.route('/book', methods=['GET', 'POST'])
 def book_accommodation():
+    # Verificar autenticación y rol
+    if "user_id" not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Debes iniciar sesión para hacer una reserva.'}), 401
+        flash('Debes iniciar sesión para hacer una reserva')
+        return redirect(url_for('login'))
+    
+    # Solo usuarios con rol 'user' pueden hacer reservas
+    if session.get("role") not in ["user", "admin"]:
+        error_msg = 'Solo los usuarios pueden hacer reservas. Las compañías no pueden reservar.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': error_msg}), 403
+        flash(error_msg)
+        return redirect(url_for('aco.home'))
+    
     if request.method == 'POST':
         user_id = request.form.get('userId')
         accommodation_id = request.form.get('accommodationId')
@@ -72,6 +96,25 @@ def book_accommodation():
         start_date = request.form.get('startDate')
         end_date = request.form.get('endDate')
         total_price = request.form.get('totalPrice')
+
+        # Verificar que el usuario de la sesión coincide con el del formulario
+        if int(user_id) != session["user_id"]:
+            error_msg = 'No puedes hacer reservas en nombre de otro usuario.'
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json'
+            if is_ajax:
+                return jsonify({'success': False, 'error': error_msg}), 403
+            flash(error_msg)
+            return redirect(url_for('aco.home'))
+        
+        # Verificar que el usuario no sea company intentando reservar su propia propiedad
+        accommodation = Accommodation.query.get(accommodation_id)
+        if accommodation and accommodation.idCompany == session["user_id"]:
+            error_msg = 'No puedes reservar en tus propias propiedades.'
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json'
+            if is_ajax:
+                return jsonify({'success': False, 'error': error_msg}), 403
+            flash(error_msg)
+            return redirect(url_for('aco.show', id=accommodation_id))
 
         # Verificar si es una petición AJAX
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json'
@@ -115,7 +158,7 @@ def book_accommodation():
                 startDate=start_date,
                 endDate=end_date,
                 totalPrice=total_price,
-                status='confirmed'
+                status='pending'
             )
 
             db.session.add(booking)
@@ -148,11 +191,21 @@ def book_accommodation():
 # =========================
 @booking_bp.route('/review', methods=['GET', 'POST'])
 def add_review():
+    # Verificar autenticación
+    if "user_id" not in session:
+        flash('Debes iniciar sesión para escribir una reseña')
+        return redirect(url_for('login'))
+    
     if request.method == 'POST':
         user_id = request.form.get('idUser')
         accommodation_id = request.form.get('idAccommodation')
         rating = request.form.get('ratingStars')
         comment = request.form.get('reviewComment')
+
+        # Verificar que el usuario de la sesión coincide con el del formulario
+        if int(user_id) != session["user_id"]:
+            flash('No puedes escribir reseñas en nombre de otro usuario.')
+            return redirect(url_for('aco.show', id=accommodation_id))
 
         try:
             rating = int(rating)
@@ -184,6 +237,14 @@ def add_review():
 # =========================
 @booking_bp.route('/bookings/json/<int:user_id>', methods=['GET'])
 def list_user_bookings(user_id):
+    # Verificar autenticación y permisos
+    if "user_id" not in session:
+        return jsonify({'error': 'Debes iniciar sesión'}), 401
+    
+    # Solo el propio usuario o admin puede ver sus reservas
+    if int(user_id) != session["user_id"] and session.get("role") != "admin":
+        return jsonify({'error': 'No tienes permiso para ver estas reservas'}), 403
+    
     bookings = AccommodationBookingLine.query.filter_by(idUser=user_id).all()
     return jsonify([{
         'id': b.id,
@@ -200,6 +261,16 @@ def list_user_bookings(user_id):
 # =========================
 @booking_bp.route('/bookings/<int:user_id>', methods=['GET'])
 def list_user_bookings_html(user_id):
+    # Verificar autenticación y permisos
+    if "user_id" not in session:
+        flash('Debes iniciar sesión para ver tus reservas')
+        return redirect(url_for('login'))
+    
+    # Solo el propio usuario o admin puede ver sus reservas
+    if int(user_id) != session["user_id"] and session.get("role") != "admin":
+        flash('No tienes permiso para ver estas reservas')
+        return redirect(url_for('aco.home'))
+    
     bookings = AccommodationBookingLine.query.filter_by(idUser=user_id).all()
     return render_template('bookings.html', bookings=bookings)
 
