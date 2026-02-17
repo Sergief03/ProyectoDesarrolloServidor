@@ -1,11 +1,41 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, request, session
+from flask import Blueprint, render_template, flash, redirect, url_for, request, session, current_app
+from werkzeug.utils import secure_filename
 from models import Accommodation, db
 from equipo3.models.AccommodationBookingLine import AccommodationBookingLine
 from equipo3.models.Room import Room
 from equipo3.models.Review import Review
 from datetime import datetime
+import os
+import uuid
 
 acomodation_bp = Blueprint('aco', __name__, template_folder='../templates')
+
+# Allowed extensions for images
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_uploaded_file(file):
+    """Guarda un archivo subido y retorna la ruta relativa"""
+    if file and file.filename and allowed_file(file.filename):
+        # Generar nombre único para evitar conflictos
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        
+        # Obtener la ruta de upload desde la configuración
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'equipo3/static/uploads')
+        
+        # Asegurar que el directorio existe
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Guardar el archivo
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        # Retornar la ruta relativa para guardar en la BD
+        return f"uploads/{unique_filename}"
+    return None
 
 # =========================
 # ADMIN DASHBOARD
@@ -119,6 +149,13 @@ def create():
         return redirect(url_for('aco.home'))
 
     if request.method == 'POST':
+        # Manejar subida de imagen
+        image_url = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file.filename:
+                image_url = save_uploaded_file(file)
+        
         accommodation = Accommodation(
             name=request.form['name'],
             address=request.form['address'],
@@ -127,11 +164,13 @@ def create():
             stars_quality=request.form['stars_quality'],
             description=request.form['description'],
             type=request.form['type'],
-            idCompany=session["user_id"]
+            idCompany=session["user_id"],
+            image_url=image_url
         )
 
         db.session.add(accommodation)
         db.session.commit()
+        flash('Property created successfully!', 'success')
         return redirect(url_for('aco.home'))
     
     return render_template('acomodationCreate.html')
@@ -193,8 +232,19 @@ def delete(id):
         flash('No tienes permiso')
         return redirect(url_for('aco.home'))
 
+    # Eliminar imagen asociada si existe
+    if accommodation.image_url:
+        image_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'equipo3/static/uploads'), 
+                                 os.path.basename(accommodation.image_url))
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except Exception as e:
+                print(f"Error deleting image: {e}")
+
     db.session.delete(accommodation)
     db.session.commit()
+    flash('Property deleted successfully!', 'success')
     return redirect(url_for('aco.home'))
 
 
@@ -223,9 +273,29 @@ def edit(id):
         accommodation.stars_quality = request.form['stars_quality']
         accommodation.description = request.form['description']
         accommodation.type = request.form['type']
+        
+        # Manejar subida de nueva imagen (opcional)
+        if 'image' in request.files:
+            file = request.files['image']
+            if file.filename:
+                # Eliminar imagen anterior si existe
+                if accommodation.image_url:
+                    old_image_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'equipo3/static/uploads'), 
+                                                 os.path.basename(accommodation.image_url))
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                
+                # Guardar nueva imagen
+                image_url = save_uploaded_file(file)
+                if image_url:
+                    accommodation.image_url = image_url
 
         db.session.commit()
+        flash('Property updated successfully!', 'success')
         return redirect(url_for('aco.home'))
+    
+    # GET request - mostrar formulario de edición
+    return render_template('acomodationEdit.html', accommodation=accommodation)
 
 # =========================
 # MANAGE ROOMS

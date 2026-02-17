@@ -43,8 +43,11 @@
         {% for stay in accommodations %}
         <a href="{{ url_for('aco.show', id=stay.id, checkin=checkin, checkout=checkout) }}" class="card-link">
             <div class="card">
-                <!-- Placeholder image since we don't have images in DB yet -->
+                {% if stay.image_url %}
+                <img src="{{ url_for('static', filename=stay.image_url) }}" alt="{{ stay.name }}" class="card-img">
+                {% else %}
                 <img src="https://placehold.co/600x400?text={{ stay.name }}" alt="{{ stay.name }}" class="card-img">
+                {% endif %}
                 <div class="card-body">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <h3 class="card-title">{{ stay.name }}</h3>

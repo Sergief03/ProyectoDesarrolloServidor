@@ -8,7 +8,7 @@
         <div class="card-body">
             <h1 style="margin-bottom: var(--spacing-lg);">Edit Property</h1>
 
-            <form action="{{ url_for('aco.edit', id=accommodation.id) }}" method="POST">
+            <form action="{{ url_for('aco.edit', id=accommodation.id) }}" method="POST" enctype="multipart/form-data">
                 <div class="grid grid-cols-2" style="gap: var(--spacing-md); grid-template-columns: 1fr 1fr;">
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="name" class="form-label">Property Name</label>
@@ -57,6 +57,31 @@
                         <textarea id="description" name="description" class="form-control" rows="5"
                             required>{{ accommodation.description }}</textarea>
                     </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="image" class="form-label">
+                            <i class="fa-solid fa-image"></i> Property Image (Optional)
+                        </label>
+                        {% if accommodation.image_url %}
+                        <div style="margin-bottom: var(--spacing-sm);">
+                            <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">Current image:</p>
+                            <img src="{{ url_for('static', filename=accommodation.image_url) }}" 
+                                 alt="{{ accommodation.name }}" 
+                                 style="max-width: 300px; max-height: 200px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        </div>
+                        {% endif %}
+                        <input type="file" id="image" name="image" class="form-control" accept="image/*">
+                        <small class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                            {% if accommodation.image_url %}
+                            Leave empty to keep current image. 
+                            {% endif %}
+                            Formats allowed: JPG, PNG, GIF, WEBP (Max 16MB)
+                        </small>
+                        <div id="imagePreview" style="margin-top: var(--spacing-sm); display: none;">
+                            <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">New image preview:</p>
+                            <img id="previewImg" src="" alt="Preview" style="max-width: 300px; max-height: 200px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex justify-between items-center" style="margin-top: var(--spacing-lg);">
@@ -67,4 +92,24 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Preview de imagen antes de subir
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+</script>
 {% endblock %}
