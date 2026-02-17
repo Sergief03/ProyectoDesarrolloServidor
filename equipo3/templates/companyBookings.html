@@ -60,6 +60,14 @@
                                 </form>
                                 {% endif %}
                             </td>
+                            <td style="padding: var(--spacing-sm);">
+                                {% if booking.status == 'pending' %}
+                                <form action="{{ url_for('booking.accept_booking', id=booking.id) }}" method="POST"
+                                    onsubmit="return confirm('Accept this reservation?');">
+                                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                </form>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
